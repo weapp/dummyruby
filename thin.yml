@@ -1,0 +1,14 @@
+---
+# chdir: "/usr/src/app"
+environment: production
+address: 0.0.0.0
+port:  <%= ENV["PORT"] || 8080 %>
+timeout: 30
+max_conns: 1024
+max_persistent_conns: 100
+require: []
+wait: 30
+threadpool_size: 20
+threaded: true
+no-epoll: true
+daemonize: false

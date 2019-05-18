@@ -1,0 +1,56 @@
+---
+.kind: extensions/v1beta1::Deployment
+.M.name: default::dummy-server
+replicas: 1
+template:
+  .M.name: dummy-server
+  terminationGracePeriodSeconds: 30
+  containers:
+    - name: dummy-server
+      image: weapp/$(APP_NAME):latest
+      imagePullPolicy: "Always"
+      .env:
+        PORT: "8080"
+---
+.kind: v1::Service
+.M.name: dummy-internal-service
+ports:
+- .port: 80:8080
+  protocol: TCP
+selector:
+  app: dummy-server
+externalTrafficPolicy: Local
+type: LoadBalancer
+---
+.kind: extensions/v1beta1::Deployment
+metadata:
+.M.name: test-oauth2-proxy
+replicas: 1
+selector:
+  matchLabels:
+    app: test-oauth2-proxy
+template:
+  .M.name: test-oauth2-proxy
+  containers:
+  - image: bitnami/oauth2-proxy
+    name: oauth2-proxy
+    args:
+    - --email-domain=*
+    - --provider=google
+    - --client-id=$(GOOGLE_CLIENT_ID)
+    - --client-secret=$(GOOGLE_CLIENT_SECRET)
+    - --upstream=http://dummy-internal-service
+    - --cookie-secret=secretsecret
+    - --http-address=:8080
+    - --cookie-secure=false
+    - --cookie-name=macookies
+---
+.kind: v1::Service
+.M.name: test-oauth2-proxy
+ports:
+- .port: 80:8080
+  protocol: TCP
+selector:
+  app: test-oauth2-proxy
+externalTrafficPolicy: Local
+type: LoadBalancer
